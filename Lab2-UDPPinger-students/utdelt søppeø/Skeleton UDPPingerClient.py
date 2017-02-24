@@ -5,17 +5,18 @@ import time
 from socket import *
 
 # Get the server hostname and port as command line arguments                    
-host = # FILL IN START		# FILL IN END
-port = # FILL IN START		# FILL IN END
+host = "10.22.43.26"# FILL IN START		# FILL IN END
+port = 9999# FILL IN START		# FILL IN END
 timeout = 1 # in seconds
  
 # Create UDP client socket
 # FILL IN START		
-
+clientsocket = socket(AF_INET, SOCK_DGRAM)
 # Note the second parameter is NOT SOCK_STREAM
 # but the corresponding to UDP
 
 # Set socket timeout as 1 second
+clientsocket.settimeout(timeout)
 
 
 # FILL IN END
@@ -27,22 +28,27 @@ ptime = 0
 while ptime < 10: 
     ptime += 1
     # Format the message to be sent as in the Lab description	
-    data = # FILL IN START		# FILL IN END
+    data = 12# FILL IN START		# FILL IN END
     
     try:
     	# FILL IN START
+
     	
 	# Record the "sent time"
-
+	sendTime = time.time()
+	#sendTime = time.time()
+	
 	# Send the UDP packet with the ping message
+	clientsocket.sendto(data, adress)
 
 	# Receive the server response
-  
+	data, adress = socket.recvfrom(1024)
 	# Record the "received time"
-
+	recTime = time.time()
 	# Display the server response as an output
-    
+	print "msg: " data
 	# Round trip time is the difference between sent and received time
+	print "delta time. " sendTime-recTime
 
         
         # FILL IN END
