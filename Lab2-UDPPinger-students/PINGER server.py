@@ -3,7 +3,7 @@ from socket import *
 
 serverSocket = socket(AF_INET, SOCK_DGRAM)
 
-serverSocket.bind(("10.22.43.26",12000))
+serverSocket.bind(("",12000))
 
 print("ready for pings")
 
