@@ -27,3 +27,9 @@ func Transmit(msgTx chan Message) {
 	// JSON this shit!
 	// send on TCP!
 }
+
+
+func Recieve(msgRx chan Message){
+	// JSON unmarshal!
+	// sett strcut på chan!
+}
