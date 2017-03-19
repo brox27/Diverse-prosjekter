@@ -3,70 +3,95 @@
 package main
 
 import (
-	. "fmt"
+	"fmt"
+	"../ConfigFile"
 	"net"
-//	"time"
-)
-type MsgType int
-
-const (
-	Login MsgType = iota
-	Logout
-	Msg
-	Names
-	Help
+	. "../Network"
 )
 
-type Message struct{
-	Timestamp string
-	Sender string
-	Response string
-	Content string
-}
 
-type Client struct{
-	IP string
-	Username string
-	Socket *net.TCPConn
-}
+func main(){
+	// start NN
+	//
+	fmt.Printf("Lift off \n \n")
 
-var AllClients map[string]*Client
+	RecieveChan := make(chan ConfigFile.Request)
+	SendChan := make(chan ConfigFile.ResponseStruct)
+	NewConnectionChan := make(chan *net.TCPConn)
+	AllClients :=  make(map[string]*ConfigFile.Client)
 
-func main() {
-	Printf("Server running... \n")
-	msgTx := make(chan Message)
-	conRx := make(chan Message)
-	// start NW sender med msgTx
-	msgRx := make(chan Message)
-	// start NW mottaker med msgRx
+	go ConnectionListener(NewConnectionChan)
 
-	for {
-		select{
-		case connected := <- conRx:
-			thatIP := connected.RemoteAddr().string()
-			temp := Client{}
-			AllClients[thatIP] = &temp
 
-		case recieved := <- msgRx:
-			request := "LOL" // recieved.request
-			content := "LOL"// recieved.content
-			switch(request){
-			case "login":
+	select{
+		case NewMsg := <- RecieveChan:
+			switch NewMsg.Request{
+			case ConfigFile.LOGIN:
+				if (isValidLogin()){
+					AllClients[NewMsg.Adress].Username = NewMsg.Content
+					response := new(ConfigFile.ResponseStruct)
+					response.Sender = "Server"
+					response.Content = "Login Successful"
+					SendChan <- *response
+					// SEND HISTORY
 
-			case "logout":
+				}else{
+					println("ERROR invalid login")
+				}
+			case ConfigFile.LOGOUT:
+				if isLoggedIn(){
+					response := new(ConfigFile.ResponseStruct)
+					response.Sender = "Server"
+					response.Content = "Logout Successful"
+					SendChan <- *response
+					// Close TCP connection
+					delete(AllClients, NewMsg.Adress)
+				}else{
+					println("You DUMB fuck...")
+				}
+			case ConfigFile.MSG:
+				if isLoggedIn(){
+					for key := range AllClients{
+						response := new(ConfigFile.ResponseStruct)
+						response.Sender = AllClients[NewMsg.Adress].Username
+						response.Content = NewMsg.Content
+						response.Recipient = AllClients[key].Socket
+						SendChan <- *response
+					}
+				}else{
+					println("You DUMB fuck...")
+				}
+			case ConfigFile.NAMES:
+				response := new(ConfigFile.ResponseStruct)	
+				response.Content = "Logged in Users are: \n"
+				for key := range AllClients{
+					response.Content = response.Content + AllClients[key].Username + "\n"
+				}
+				response.Sender = "Server"
+				response.Recipient = NewMsg.Socket
 
-			case "msg":
-
-			case "names":
-
-			case "help":
-
-			default:
-				Printf("ERROR: unknown request \n")
+			case ConfigFile.HELP:
+				println("standard svar	")
 			}
-		default:
-			continue
-		}
-
+		case NewConnection := <- NewConnectionChan:
+				address := NewConnection.RemoteAddr().String()
+				var temp ConfigFile.Client
+				temp.Username = ""
+				temp.Socket = NewConnection
+				AllClients[address] = &temp
+				go ClientListener(NewConnection, RecieveChan)
+				fmt.Printf("new Connection from %+v \n", address)
 	}
+	for key := range AllClients{
+		 AllClients[key].Socket.Close()
+	}
+}
+
+
+func isValidLogin() bool{
+	return true
+}
+
+func isLoggedIn() bool{
+	return true
 }
