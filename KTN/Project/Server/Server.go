@@ -9,12 +9,16 @@ import (
 	. "../Network"
 	"time"
 	"unicode"
+	"encoding/json"
 )
 
 
 func main(){
 	// start NN
 	//
+	//type AllMsgs []Msges
+	AllMsgs := make(map[int] []byte)
+	id := 0
 	fmt.Printf("Lift off Server \n \n")
 
 	RecieveChan := make(chan ConfigFile.Request)
@@ -33,6 +37,7 @@ func main(){
 				response.Recipient = NewMsg.Socket
 				response.Sender = "Server"
 				response.Timestamp = getTime()
+				response.Response = ConfigFile.INFO
 
 				switch NewMsg.Request{
 				case ConfigFile.LOGIN:
@@ -42,6 +47,12 @@ func main(){
 						response.Content = "Login Successful"
 						SendChan <- response
 						// SEND HISTORY
+						var HistoryStruct ConfigFile.HistoryStruct
+						HistoryStruct.Timestamp = getTime()
+						HistoryStruct.Response = ConfigFile.HISTORY
+						HistoryStruct.Content = AllMsgs
+						SendHistory(HistoryStruct, response.Recipient)
+
 
 					}else{
 
@@ -52,7 +63,6 @@ func main(){
 					if isLoggedIn(NewMsg, AllClients){
 						response.Content = "Logout Successful"
 						SendChan <- response
-						// Close TCP connection
 						AllClients[NewMsg.Adress].Socket.Close()
 						delete(AllClients, NewMsg.Adress)
 					}else{
@@ -61,12 +71,17 @@ func main(){
 					}
 				case ConfigFile.MSG:
 					if isLoggedIn(NewMsg, AllClients){
+					response.Response = ConfigFile.MESSEGE
 						for key := range AllClients{
 							response.Sender = AllClients[NewMsg.Adress].Username
 							response.Content = NewMsg.Content
 							response.Recipient = AllClients[key].Socket
 							SendChan <- response
 						}
+					arg, _ := json.Marshal(NewMsg)
+					AllMsgs[id] = arg
+					id++	
+					
 					}else{
 						response.Content = "ERROR"
 						SendChan <- response

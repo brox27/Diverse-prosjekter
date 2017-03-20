@@ -29,6 +29,11 @@ func ServerTransmitter(sendchan chan ConfigFile.ResponseStruct){
 	}
 }
 
+func SendHistory(mappet ConfigFile.HistoryStruct,conn *net.TCPConn ){
+	arg, _ := json.Marshal(mappet)
+	conn.Write(arg)
+}
+
 func ClientTransmitter(sendchan chan ConfigFile.Request, conn *net.TCPConn){
 	println("Transmitter Started...Client")
 	for{

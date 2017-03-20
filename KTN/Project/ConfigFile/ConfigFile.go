@@ -14,6 +14,13 @@ type ResponseStruct	 struct{
 	Content string		`json:"content"`
 }
 
+type HistoryStruct struct{
+	Timestamp string	`json:"timestamp"`
+	Sender string		`json:"sender"`
+	Response string 	`json:"response"`// might be JSON struct
+	Content map[int] []byte		`json:"content"`
+}
+
 type Request struct{
 	Socket *net.TCPConn	`json:"-"`// must be changed
 	Adress string	`json:"-"`// must be changed
@@ -28,6 +35,13 @@ const (
 	NAMES = "names"
 	HELP = "help"
 	ERROR = "error"
+)
+
+const (
+	ERROR2 = "Error"
+	INFO = "Info"
+	MESSEGE = "Message"
+	HISTORY = "History"
 )
 
 type Client struct{
