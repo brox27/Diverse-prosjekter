@@ -6,7 +6,8 @@ import (
 //	. "fmt"
 	"../ConfigFile"
 	"encoding/json"
-//	"time"
+	"time"
+	"log"
 	"net"
 )
 const SV_LISTEN_ADDRESS = "127.0.0.1:12345"
@@ -15,10 +16,12 @@ func ServerTransmitter(sendchan chan ConfigFile.ResponseStruct){
 	println("Transmitter Started...SERVER")
 }
 
-func ClientTransmitter(sendchan chan ConfigFile.Request){
+func ClientTransmitter(sendchan chan ConfigFile.Request, conn *net.TCPConn){
 	println("Transmitter Started...SERVER")
-	for{
-		
+	select{
+		case SendStruct := <- sendchan:
+			arg, _ := json.Marshal(SendStruct)
+			conn.Write(arg)
 	}
 }
 
@@ -33,7 +36,7 @@ func ClientListener(conn *net.TCPConn, RecieveChan chan ConfigFile.Request){
 	}
 }
 
-func FromServerListener(RecieveChan chan ConfigFile.ResponseStruct){
+func FromServerListener(conn *net.TCPConn, RecieveChan chan ConfigFile.ResponseStruct){
 	for{
 		buf := make([]byte, 1024)
 		n, err := conn.Read(buf)		//difference read og readfrom??
@@ -59,4 +62,21 @@ func ConnectionListener(NewConnectionChan chan *net.TCPConn){
 		}
 		NewConnectionChan <- conn
 	}
+}
+
+
+func ConnectToServer(addr string) (*net.TCPConn){
+    remote, err := net.ResolveTCPAddr("tcp", addr)
+    if err != nil {
+        log.Fatal(err)
+    }
+
+    for {
+        conn, err := net.DialTCP("tcp", nil, remote)
+        if err == nil {
+            return conn
+        }
+        log.Println("Could not connect to server. Retrying...")
+        time.Sleep(1 * time.Second)
+    }
 }

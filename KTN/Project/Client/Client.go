@@ -20,10 +20,13 @@ func main(){
 	IOInputChan := make(chan string)
 	RecieveChan := make(chan ConfigFile.ResponseStruct)
 	SendChan := make(chan ConfigFile.Request)
+	server_addr := "127.0.0.1:12345"
 
-	go FromServerListener(RecieveChan)
+	conn := ConnectToServer(server_addr)
+
+	go FromServerListener(conn, RecieveChan)
 	go userInnput(IOInputChan)
-	go ClientTransmitter(SendChan)
+	go ClientTransmitter(SendChan, conn)
 
 	select{
 	case NewInput := <- IOInputChan:
