@@ -11,14 +11,19 @@ import (
 	"fmt"
 	"net"
 )
-const SV_LISTEN_ADDRESS = "192.168.1.17:63955"
+const SV_LISTEN_ADDRESS = "192.168.1.84:63955"
 
 func ServerTransmitter(sendchan chan ConfigFile.ResponseStruct){
-	println("Transmitter Started...SERVER")
+	//println("Transmitter Started...SERVER")
+	fmt.Printf("bruker fmt \n")
 	for{
 		select{
 		case SendStruct := <- sendchan:
+//			fmt.Printf("sensed something to send\n")
+//			fmt.Printf("struct ser slik ut: %+v \n", SendStruct)
 			arg, _ := json.Marshal(SendStruct)
+//			fmt.Printf("sending to %+v", SendStruct.Recipient)
+//			fmt.Printf("sending the struct%+v", SendStruct.Response)
 			SendStruct.Recipient.Write(arg)
 	}
 	}
@@ -30,6 +35,7 @@ func ClientTransmitter(sendchan chan ConfigFile.Request, conn *net.TCPConn){
 	select{
 		case SendStruct := <- sendchan:
 			arg, _ := json.Marshal(SendStruct)
+		//	fmt.Printf("arg: %+v \n", string(arg))
 			conn.Write(arg)
 	}
 	}
@@ -39,23 +45,32 @@ func ClientListener(conn *net.TCPConn, RecieveChan chan ConfigFile.Request){
 	for{
 		buf := make([]byte, 1024)
 		n, err := conn.Read(buf)		//difference read og readfrom??
-		if (err != nil){println("ERROR i ClientListener")
-		fmt.Printf("error er: %+v \n", err)}
-		var NewReq ConfigFile.Request
-		json.Unmarshal(buf[:n], NewReq)
-		RecieveChan <- NewReq
+	//	bufff := string(buf)
+	//	fmt.Printf("buf er: %+v \n", bufff)
+        if err != nil {
+            fmt.Printf("feilen er %+v \n", err)
+            fmt.Printf("n er ", n)
+            return
+        }
+	var NewReq ConfigFile.Request
+	json.Unmarshal(buf[:n], &NewReq)
+	NewReq.Adress = conn.RemoteAddr().String()
+	NewReq.Socket = conn
+
+	RecieveChan <- NewReq
 	}
 }
-
+	
 func FromServerListener(conn *net.TCPConn, RecieveChan chan ConfigFile.ResponseStruct){
 	for{
 		buf := make([]byte, 1024)
-		n, err := conn.Read(buf)		//difference read og readfrom??
-		if (err != nil){println("ERROR i FromServerListener")}
+		n, _ := conn.Read(buf)		//difference read og readfrom??
+	//	if (err != nil){println("ERROR i FromServerListener")}
 		var NewReq ConfigFile.ResponseStruct
-		json.Unmarshal(buf[:n], NewReq)
+		json.Unmarshal(buf[:n], &NewReq)
 		RecieveChan <- NewReq
 	}
+	conn.Close()
 }
 
 func ConnectionListener(NewConnectionChan chan *net.TCPConn){
@@ -64,12 +79,12 @@ func ConnectionListener(NewConnectionChan chan *net.TCPConn){
 
 	ln, err := net.ListenTCP("tcp", local)
 	if err != nil {
-		// handle error
+		fmt.Printf("error in ConnectionListener... could not...")
 	}
 	for {
 		conn, err := ln.AcceptTCP()
 		if err != nil {
-			// handle error
+			fmt.Printf("error in ConnectionListener... could not...")
 		}
 		NewConnectionChan <- conn
 	}
