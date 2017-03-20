@@ -20,27 +20,30 @@ func main(){
 	IOInputChan := make(chan string)
 	RecieveChan := make(chan ConfigFile.ResponseStruct)
 	SendChan := make(chan ConfigFile.Request)
-	server_addr := "127.0.0.1:12345"
+	server_addr := "192.168.1.17:63955"
 
 	conn := ConnectToServer(server_addr)
 
 	go FromServerListener(conn, RecieveChan)
 	go userInnput(IOInputChan)
 	go ClientTransmitter(SendChan, conn)
-
-	select{
-	case NewInput := <- IOInputChan:
-		println("new NewInput")
-		println(NewInput)
-		temp := makeRequestStruct(NewInput)
-		if temp.Request != ConfigFile.ERROR{
-			SendChan <- temp
-		}else{
-			fmt.Printf("you dumb ass motherfucker.....")
-		}
-	case Respose := <- RecieveChan:
-		println("recieved from server")
-		println(Respose.Sender)
+	
+	for{
+		select{
+		case NewInput := <- IOInputChan:
+			println("new NewInput")
+			println(NewInput)
+			temp := makeRequestStruct(NewInput)
+			if temp.Request != ConfigFile.ERROR{
+				SendChan <- temp
+			}else{
+				fmt.Printf("you dumb ass motherfucker.....")
+			}
+		case Respose := <- RecieveChan:
+			println("recieved from server")
+			//println(Respose.Sender)
+			fmt.Printf("msg says: %+v \n", Respose.Sender)
+		}			
 
 	}
 

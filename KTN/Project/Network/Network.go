@@ -8,20 +8,30 @@ import (
 	"encoding/json"
 	"time"
 	"log"
+	"fmt"
 	"net"
 )
-const SV_LISTEN_ADDRESS = "127.0.0.1:12345"
+const SV_LISTEN_ADDRESS = "192.168.1.17:63955"
 
 func ServerTransmitter(sendchan chan ConfigFile.ResponseStruct){
 	println("Transmitter Started...SERVER")
+	for{
+		select{
+		case SendStruct := <- sendchan:
+			arg, _ := json.Marshal(SendStruct)
+			SendStruct.Recipient.Write(arg)
+	}
+	}
 }
 
 func ClientTransmitter(sendchan chan ConfigFile.Request, conn *net.TCPConn){
-	println("Transmitter Started...SERVER")
+	println("Transmitter Started...Client")
+	for{
 	select{
 		case SendStruct := <- sendchan:
 			arg, _ := json.Marshal(SendStruct)
 			conn.Write(arg)
+	}
 	}
 }
 
@@ -29,7 +39,8 @@ func ClientListener(conn *net.TCPConn, RecieveChan chan ConfigFile.Request){
 	for{
 		buf := make([]byte, 1024)
 		n, err := conn.Read(buf)		//difference read og readfrom??
-		if (err != nil){println("ERROR i ClientListener")}
+		if (err != nil){println("ERROR i ClientListener")
+		fmt.Printf("error er: %+v \n", err)}
 		var NewReq ConfigFile.Request
 		json.Unmarshal(buf[:n], NewReq)
 		RecieveChan <- NewReq
@@ -40,7 +51,7 @@ func FromServerListener(conn *net.TCPConn, RecieveChan chan ConfigFile.ResponseS
 	for{
 		buf := make([]byte, 1024)
 		n, err := conn.Read(buf)		//difference read og readfrom??
-		if (err != nil){println("ERROR i ClientListener")}
+		if (err != nil){println("ERROR i FromServerListener")}
 		var NewReq ConfigFile.ResponseStruct
 		json.Unmarshal(buf[:n], NewReq)
 		RecieveChan <- NewReq
