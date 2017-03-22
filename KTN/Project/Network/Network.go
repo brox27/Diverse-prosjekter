@@ -19,18 +19,36 @@ func ServerTransmitter(sendchan chan ConfigFile.ResponseStruct){
 	for{
 		select{
 		case SendStruct := <- sendchan:
-//			fmt.Printf("sensed something to send\n")
-//			fmt.Printf("struct ser slik ut: %+v \n", SendStruct)
+	//		fmt.Printf("sensed something to send\n")
+	//\\		fmt.Printf("struct ser slik ut: %+v \n", SendStruct)
 			arg, _ := json.Marshal(SendStruct)
 //			fmt.Printf("sending to %+v", SendStruct.Recipient)
 //			fmt.Printf("sending the struct%+v", SendStruct.Response)
 			SendStruct.Recipient.Write(arg)
-	}
+		}
+//
 	}
 }
 
-func SendHistory(mappet ConfigFile.HistoryStruct,conn *net.TCPConn ){
-	arg, _ := json.Marshal(mappet)
+func ServerTransmitter2(sendFile ConfigFile.ResponseStruct, conn *net.TCPConn){
+	//println("Transmitter Started...SERVER")
+//			fmt.Printf("sensed something to send\n")
+		println("skal ha sendt1 ")	
+//			fmt.Printf("struct ser slik ut: %+v \n", SendStruct)
+			arg, _ := json.Marshal(sendFile)
+//			fmt.Printf("sending to %+v", SendStruct.Recipient)
+//			fmt.Printf("sending the struct%+v", SendStruct.Response)
+			conn.Write(arg)
+			println("skal ha sendt", string(arg))
+	}
+
+func SendHistory(historystruct ConfigFile.HistoryStruct, conn *net.TCPConn ){
+	time.Sleep(2*time.Second)
+	fmt.Printf("starter JSON \n")
+	arg, _ := json.Marshal(historystruct)
+	time.Sleep(2*time.Second)
+	fmt.Printf("sender dette:  \n", arg)
+	fmt.Printf("sender stringen:  \n", string(arg))
 	conn.Write(arg)
 }
 
@@ -46,7 +64,7 @@ func ClientTransmitter(sendchan chan ConfigFile.Request, conn *net.TCPConn){
 	}
 }
 
-func ClientListener(conn *net.TCPConn, RecieveChan chan ConfigFile.Request){
+func ClientListener(conn *net.TCPConn, RecieveChan chan ConfigFile.ServerRequest){
 	for{
 		buf := make([]byte, 1024)
 		n, err := conn.Read(buf)		//difference read og readfrom??
@@ -57,7 +75,7 @@ func ClientListener(conn *net.TCPConn, RecieveChan chan ConfigFile.Request){
             fmt.Printf("n er ", n)
             return
         }
-	var NewReq ConfigFile.Request
+	var NewReq ConfigFile.ServerRequest
 	json.Unmarshal(buf[:n], &NewReq)
 	NewReq.Adress = conn.RemoteAddr().String()
 	NewReq.Socket = conn
@@ -66,14 +84,27 @@ func ClientListener(conn *net.TCPConn, RecieveChan chan ConfigFile.Request){
 	}
 }
 	
-func FromServerListener(conn *net.TCPConn, RecieveChan chan ConfigFile.ResponseStruct){
+func FromServerListener(conn *net.TCPConn, RecieveChan chan ConfigFile.ResponseStruct, historyChan chan ConfigFile.HistoryStruct){
 	for{
 		buf := make([]byte, 1024)
-		n, _ := conn.Read(buf)		//difference read og readfrom??
+		n, err := conn.Read(buf)		//difference read og readfrom??
+		if err != nil {
+            conn.Close()
+            fmt.Println("Lost connection with server")
+           // connection_terminated <- true
+            return
+        }
 	//	if (err != nil){println("ERROR i FromServerListener")}
 		var NewReq ConfigFile.ResponseStruct
 		json.Unmarshal(buf[:n], &NewReq)
-		RecieveChan <- NewReq
+		if NewReq.Response == ConfigFile.HISTORY{
+			var HistReq ConfigFile.HistoryStruct
+			json.Unmarshal(buf[:n], &HistReq)
+			historyChan <- HistReq
+		}else{
+			RecieveChan <- NewReq
+		}
+		
 	}
 	conn.Close()
 }

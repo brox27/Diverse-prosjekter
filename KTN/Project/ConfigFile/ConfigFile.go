@@ -18,15 +18,23 @@ type HistoryStruct struct{
 	Timestamp string	`json:"timestamp"`
 	Sender string		`json:"sender"`
 	Response string 	`json:"response"`// might be JSON struct
-	Content map[int] []byte		`json:"content"`
+	Content [] []byte		`json:"content"`
 }
 
 type Request struct{
+//	Socket *net.TCPConn	`json:"-"`// must be changed
+//	Adress string	`json:"-"`// must be changed
+	Request string	`json:"request"`	//
+	Content string	`json:"content"`
+}
+
+type ServerRequest struct{
 	Socket *net.TCPConn	`json:"-"`// must be changed
 	Adress string	`json:"-"`// must be changed
 	Request string	`json:"request"`	//
 	Content string	`json:"content"`
 }
+
 
 const (
 	LOGIN = "login"
@@ -38,10 +46,10 @@ const (
 )
 
 const (
-	ERROR2 = "Error"
-	INFO = "Info"
-	MESSEGE = "Message"
-	HISTORY = "History"
+	ERROR2 = "error"
+	INFO = "info"
+	MESSEGE = "message"
+	HISTORY = "history"
 )
 
 type Client struct{

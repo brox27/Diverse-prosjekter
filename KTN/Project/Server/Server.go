@@ -14,30 +14,34 @@ import (
 
 
 func main(){
-	// start NN
-	//
 	//type AllMsgs []Msges
 	AllMsgs := make(map[int] []byte)
-	id := 0
+		id := 0
 	fmt.Printf("Lift off Server \n \n")
+	var MsgHistory [] []byte
+	var Historien []ConfigFile.ResponseStruct
 
-	RecieveChan := make(chan ConfigFile.Request)
-	SendChan := make(chan ConfigFile.ResponseStruct)
+	RecieveChan := make(chan ConfigFile.ServerRequest)
+//	SendChan := make(chan ConfigFile.ResponseStruct)
 	NewConnectionChan := make(chan *net.TCPConn)
 	AllClients :=  make(map[string]*ConfigFile.Client)
 
 	go ConnectionListener(NewConnectionChan)
-	go ServerTransmitter(SendChan)
+//	go ServerTransmitter(SendChan)
 
 	for{
 		select{
 			case NewMsg := <- RecieveChan:
 				fmt.Printf("struct i recieved: \n %+v \n\n", NewMsg)
 				var response ConfigFile.ResponseStruct
-				response.Recipient = NewMsg.Socket
+			//	response.Recipient = NewMsg.Socket
 				response.Sender = "Server"
 				response.Timestamp = getTime()
 				response.Response = ConfigFile.INFO
+		//		fmt.Printf("req type er: ", NewMsg.Request)
+		//		if(NewMsg.Request == "login"){
+		//			println("SCOORE MOTHERFUCKER")c
+		//		}
 
 				switch NewMsg.Request{
 				case ConfigFile.LOGIN:
@@ -45,57 +49,78 @@ func main(){
 						fmt.Printf("sensed a login with Username %+v \n", NewMsg.Content)
 						AllClients[NewMsg.Adress].Username = NewMsg.Content
 						response.Content = "Login Successful"
-						SendChan <- response
+//						SendChan <- response
+						ServerTransmitter2(response, NewMsg.Socket)
 						// SEND HISTORY
 						var HistoryStruct ConfigFile.HistoryStruct
 						HistoryStruct.Timestamp = getTime()
 						HistoryStruct.Response = ConfigFile.HISTORY
-						HistoryStruct.Content = AllMsgs
-						SendHistory(HistoryStruct, response.Recipient)
+					//	HistoryStruct.Content = AllMsgs
+						HistoryStruct.Content = MsgHistory
+					//	Historien2, _ := json.Marshal(Historien)
+					//	HistoryStruct.Content = Historien2
+						println("*** rett over bror")
+
+				//		HistoryStruct.Content = MsgHistory
+						if Historien != nil{
+							println("*** SKAL SENDE HISTORY")
+							SendHistory(HistoryStruct, NewMsg.Socket)
+						}
 
 
 					}else{
-
+						response.Response = ConfigFile.ERROR
 						response.Content = "Login Error"
-						SendChan <- response
+					//	SendChan <- response
+						ServerTransmitter2(response, NewMsg.Socket)
 					}
 				case ConfigFile.LOGOUT:
 					if isLoggedIn(NewMsg, AllClients){
 						response.Content = "Logout Successful"
-						SendChan <- response
+						//SendChan <- response
+						ServerTransmitter2(response, NewMsg.Socket)
 						AllClients[NewMsg.Adress].Socket.Close()
 						delete(AllClients, NewMsg.Adress)
 					}else{
+						response.Response = ConfigFile.ERROR
 						response.Content = "Logout ERROR"
-						SendChan <- response
+					//	SendChan <- response
+						ServerTransmitter2(response, NewMsg.Socket)
 					}
 				case ConfigFile.MSG:
 					if isLoggedIn(NewMsg, AllClients){
 					response.Response = ConfigFile.MESSEGE
+					response.Sender = AllClients[NewMsg.Adress].Username
+					response.Content = NewMsg.Content
+					response2, _ := json.Marshal(response)
+					MsgHistory = append(MsgHistory, response2)
+					Historien = append(Historien, response)
 						for key := range AllClients{
-							response.Sender = AllClients[NewMsg.Adress].Username
-							response.Content = NewMsg.Content
 							response.Recipient = AllClients[key].Socket
-							SendChan <- response
+							//println(key)
+	//						SendChan <- response
+							ServerTransmitter2(response, AllClients[key].Socket)
 						}
 					arg, _ := json.Marshal(NewMsg)
 					AllMsgs[id] = arg
 					id++	
 					
 					}else{
-						response.Content = "ERROR"
-						SendChan <- response
+						println("jaaa...")
+						response.Response = ConfigFile.ERROR
+						ServerTransmitter2(response, NewMsg.Socket)
 					}
 				case ConfigFile.NAMES:
 					response.Content = "Logged in Users are: \n"
 					for key := range AllClients{
 						response.Content = response.Content + AllClients[key].Username + "\n"
 					}
-					SendChan <- response
+//					SendChan <- response
+					ServerTransmitter2(response, NewMsg.Socket)
 
 				case ConfigFile.HELP:
 					response.Content = "good luck.. cause I wont help you..: \n"
-					SendChan <- response
+					ServerTransmitter2(response, NewMsg.Socket)
 				}
 			case NewConnection := <- NewConnectionChan:
 					address := NewConnection.RemoteAddr().String()
@@ -107,7 +132,8 @@ func main(){
 					go ClientListener(NewConnection, RecieveChan)
 					fmt.Printf("new Connection from %+v \n", address)
 		}
-		}
+	}
+	fmt.Printf("hist: %+v \n", MsgHistory)
 	for key := range AllClients{
 	AllClients[key].Socket.Close()
 	}
@@ -115,7 +141,7 @@ func main(){
 }
 
 
-func isValidLogin(msg ConfigFile.Request, AllClients map[string]*ConfigFile.Client) bool{
+func isValidLogin(msg ConfigFile.ServerRequest, AllClients map[string]*ConfigFile.Client) bool{
 	flag := true
 	if !isLoggedIn(msg, AllClients){
 		for key := range AllClients{
@@ -144,7 +170,7 @@ func isValidLogin(msg ConfigFile.Request, AllClients map[string]*ConfigFile.Clie
 	return flag
 }
 
-func isLoggedIn(msg ConfigFile.Request, AllClients map[string]*ConfigFile.Client) bool{
+func isLoggedIn(msg ConfigFile.ServerRequest, AllClients map[string]*ConfigFile.Client) bool{
 	if AllClients[msg.Adress].Username != ""{
 		return true
 	}else{

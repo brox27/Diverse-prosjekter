@@ -10,23 +10,27 @@ import (
 	"bufio"
 	"os"
 	"strings"
+	"runtime"
+	"encoding/json"
 )
 
 
 func main(){
 	// start NN
 	//
+	fmt.Printf("OS: %s\nArchitecture: %s\n", runtime.GOOS, runtime.GOARCH)
 	fmt.Printf("Lift off \n \n")
 	IOInputChan := make(chan string)
 	RecieveChan := make(chan ConfigFile.ResponseStruct)
 	SendChan := make(chan ConfigFile.Request)
+	historyChan := make (chan ConfigFile.HistoryStruct)
 	server_addr := "192.168.1.84:63955"
 
 	conn := ConnectToServer(server_addr)
 
 	fmt.Printf("conn er oppe med : %+v \n", conn)
 
-	go FromServerListener(conn, RecieveChan)
+	go FromServerListener(conn, RecieveChan, historyChan)
 	go userInnput(IOInputChan)
 	go ClientTransmitter(SendChan, conn)
 
@@ -44,8 +48,18 @@ func main(){
 				fmt.Printf("you dumb ass motherfucker.....")
 			}
 		case Respose := <- RecieveChan:
-			println(Respose.Timestamp, " ", Respose.Sender," : ", Respose.Content)
-		}			
+				println(Respose.Timestamp, " ", Respose.Sender," : ", Respose.Content)
+
+		case History := <- historyChan:
+	//		fmt.Printf("HISTORY!!! rec %+v \n", History.Response)
+	//		fmt.Printf("contntet er %+v \n", History.Content)
+	//		fmt.Printf("lengden %+v \n", len(History.Content))
+			for _, cont := range History.Content{
+				var NewReq ConfigFile.ResponseStruct
+				json.Unmarshal(cont, &NewReq)
+				println(NewReq.Timestamp, " ", NewReq.Sender," : ", NewReq.Content)
+			}
+        }			
 
 	}
 
