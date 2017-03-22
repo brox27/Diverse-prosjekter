@@ -11,7 +11,8 @@ import (
 	"fmt"
 	"net"
 )
-const SV_LISTEN_ADDRESS = "192.168.1.84:63955"
+const SV_LISTEN_ADDRESS = "192.168.1.170:12345"
+// Raspberry = 
 
 func ServerTransmitter(sendchan chan ConfigFile.ResponseStruct){
 	//println("Transmitter Started...SERVER")
@@ -43,10 +44,10 @@ func ServerTransmitter2(sendFile ConfigFile.ResponseStruct, conn *net.TCPConn){
 	}
 
 func SendHistory(historystruct ConfigFile.HistoryStruct, conn *net.TCPConn ){
-	time.Sleep(2*time.Second)
+//		time.Sleep(2*time.Second)
 	fmt.Printf("starter JSON \n")
 	arg, _ := json.Marshal(historystruct)
-	time.Sleep(2*time.Second)
+//	time.Sleep(2*time.Second)
 	fmt.Printf("sender dette:  \n", arg)
 	fmt.Printf("sender stringen:  \n", string(arg))
 	conn.Write(arg)
@@ -131,6 +132,7 @@ func ConnectToServer(addr string) (*net.TCPConn){
     remote, err := net.ResolveTCPAddr("tcp", addr)
     if err != nil {
         log.Fatal(err)
+        fmt.Printf("\n*** ERROR i ResolveTCPAddr LES DET UNDER: \n %+v +n", err)
     }
 
     for {
@@ -139,6 +141,7 @@ func ConnectToServer(addr string) (*net.TCPConn){
             return conn
         }
         log.Println("Could not connect to server. Retrying...")
+        fmt.Printf("\n LES ALT UNDER:\n %+v \n ", err)
         time.Sleep(1 * time.Second)
     }
 }

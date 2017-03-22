@@ -24,7 +24,14 @@ func main(){
 	RecieveChan := make(chan ConfigFile.ResponseStruct)
 	SendChan := make(chan ConfigFile.Request)
 	historyChan := make (chan ConfigFile.HistoryStruct)
-	server_addr := "192.168.1.84:63955"
+	server_addr := "192.168.1.170:12345"	
+	//server_addr := "192.168.1.170:12345"	 TIL RASPBERRY
+	//  GOOS=darwin GOARCH=386 go build test.go -- for MAC!
+/*Raspberry Pi
+GOARM=5
+GOOS=linux
+GOARCH=arm
+*/
 
 	conn := ConnectToServer(server_addr)
 
