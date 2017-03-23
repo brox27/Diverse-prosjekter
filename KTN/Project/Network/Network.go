@@ -11,7 +11,7 @@ import (
 	"fmt"
 	"net"
 )
-const SV_LISTEN_ADDRESS = "192.168.1.170:12345"
+const SV_LISTEN_ADDRESS = "10.24.19.11:12345"
 // Raspberry = 
 
 func ServerTransmitter(sendchan chan ConfigFile.ResponseStruct){

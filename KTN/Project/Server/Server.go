@@ -18,7 +18,8 @@ func main(){
 	AllMsgs := make(map[int] []byte)
 		id := 0
 	fmt.Printf("Lift off Server \n \n")
-	var MsgHistory [] []byte
+	//var MsgHistory [] []byte
+	var MsgHistory [] json.RawMessage
 	var Historien []ConfigFile.ResponseStruct
 
 	RecieveChan := make(chan ConfigFile.ServerRequest)
@@ -108,6 +109,7 @@ func main(){
 					}else{
 						println("jaaa...")
 						response.Response = ConfigFile.ERROR
+						response.Content = "Login first.... "
 						ServerTransmitter2(response, NewMsg.Socket)
 					}
 				case ConfigFile.NAMES:

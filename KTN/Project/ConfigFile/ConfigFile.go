@@ -4,6 +4,7 @@ package ConfigFile
 
 import (
 "net"
+"encoding/json"
 )
 
 type ResponseStruct	 struct{
@@ -18,7 +19,8 @@ type HistoryStruct struct{
 	Timestamp string	`json:"timestamp"`
 	Sender string		`json:"sender"`
 	Response string 	`json:"response"`// might be JSON struct
-	Content [] []byte		`json:"content"`
+//	Content [] []byte		`json:"content"`
+	Content [] json.RawMessage		`json:"content"`
 }
 
 type Request struct{
