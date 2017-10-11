@@ -125,16 +125,13 @@ void AddChildren(int index) {
 	}
 }
 
-bool compare_Hvalue3(const int& first, const int& second)
+bool compare_Fvalue3(const int& first, const int& second)
 {
 
 	if (Board[first].Fcost < Board[second].Fcost) {
 		return true;
 	}
-	else {
-		return false;
-	}
-	return (Board[first].Hcost < Board[second].Hcost);
+	return false;
 }
 
 bool compare_Gvalue3(const int& first, const int& second)
@@ -143,10 +140,7 @@ bool compare_Gvalue3(const int& first, const int& second)
 	if (Board[first].Gcost < Board[second].Gcost) {
 		return true;
 	}
-	else {
-		return false;
-	}
-	return (Board[first].Hcost <= Board[second].Hcost);
+	return false;
 }
 
 bool IsNodeOpen(int thatNode) {
@@ -211,7 +205,7 @@ void SearchAlgorithm() {
 			}
 		}
 
-		if ((OpenNodeList.size() > 1) && SearchMethod == ASTAR) { OpenNodeList.sort(compare_Hvalue3); }
+		if ((OpenNodeList.size() > 1) && SearchMethod == ASTAR) { OpenNodeList.sort(compare_Fvalue3); }
 		if ((OpenNodeList.size() > 1) && SearchMethod == DIJKSTRA) { OpenNodeList.sort(compare_Gvalue3); }
 
 
