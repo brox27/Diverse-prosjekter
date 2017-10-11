@@ -108,7 +108,6 @@ int Node::Analyze(char c, int i) {
 		y++;
 		x = 0;
 	}
-	//	if (x == 1) { symbol = '^'; }
 	return INDEF;
 }
 
