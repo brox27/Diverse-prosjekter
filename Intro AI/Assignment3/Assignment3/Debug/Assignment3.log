@@ -1,0 +1,7 @@
+﻿  Assignment3.cpp
+c:\users\brox\source\repos\assignment3\assignment3\assignment3.cpp(207): warning C4018: '<': signed/unsigned mismatch
+c:\users\brox\source\repos\assignment3\assignment3\assignment3.cpp(205): warning C4101: 'next': unreferenced local variable
+c:\users\brox\source\repos\assignment3\assignment3\assignment3.cpp(205): warning C4101: 'best': unreferenced local variable
+c:\users\brox\source\repos\assignment3\assignment3\assignment3.cpp(238): warning C4101: 'temp': unreferenced local variable
+  Assignment3.vcxproj -> C:\Users\Brox\source\repos\Assignment3\Debug\Assignment3.exe
+  Assignment3.vcxproj -> C:\Users\Brox\source\repos\Assignment3\Debug\Assignment3.pdb (Partial PDB)
